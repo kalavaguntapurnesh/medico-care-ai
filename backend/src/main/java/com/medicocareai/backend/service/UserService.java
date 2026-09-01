@@ -1,13 +1,24 @@
 package com.medicocareai.backend.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.stereotype.Service;
+
+import com.medicocareai.backend.dto.user.CreateUserRequest;
+import com.medicocareai.backend.dto.user.UpdateUserRequest;
+import com.medicocareai.backend.dto.user.UserResponse;
 import com.medicocareai.backend.entity.Role;
 import com.medicocareai.backend.entity.User;
+import com.medicocareai.backend.exception.ConflictException;
+import com.medicocareai.backend.exception.ResourceNotFoundException;
 import com.medicocareai.backend.repository.RoleRepository;
 import com.medicocareai.backend.repository.UserRepository;
+import org.springframework.transaction.annotation.Transactional;
 
+@Service
+@Transactional
 public class UserService {
     private final UserRepository userRepository;
 
@@ -19,60 +30,93 @@ public class UserService {
         this.roleRepository = roleRepository;
     }
 
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    @Transactional(readOnly = true)
+    public List<UserResponse> getAllUsers() {
+        return userRepository.findAll()
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
-    public User getUserById(UUID id) {
-        return userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found : " + id));
+    @Transactional(readOnly = true)
+    public UserResponse getUserById(UUID id) {
+        User user = findUserById(id);
+        return toResponse(user);
     }
 
+    @Transactional(readOnly = true)
     public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found : " + email));
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found : " + email));
     }
 
-    public User createUser(
-            String email,
-            String passwordHash,
-            String firstName,
-            String lastName,
-            String phoneNumber,
-            String roleName) {
-        if (userRepository.existsByEmail(email)) {
-            throw new RuntimeException("User already exists : " + email);
+    public UserResponse createUser(
+            CreateUserRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new ConflictException("User already exists : " + request.getEmail());
         }
-        Role role = roleRepository.findByName(roleName)
-                .orElseThrow(() -> new RuntimeException(
-                        "Role not found: " + roleName));
+        Role role = roleRepository.findByName("PATIENT")
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Patient role has not been configured "));
 
         User user = new User();
 
-        user.setEmail(email);
-        user.setPasswordHash(passwordHash);
-        user.setFirstName(firstName);
-        user.setLastName(lastName);
-        user.setPhoneNumber(phoneNumber);
+        user.setEmail(request.getEmail());
+        user.setPasswordHash(request.getPassword());
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setPhoneNumber(request.getPhoneNumber());
         user.setRole(role);
         user.setStatus("ACTIVE");
         user.setEmailVerified(false);
-        user.setCreatedAt(java.time.LocalDateTime.now());
-        user.setUpdatedAt(java.time.LocalDateTime.now());
 
-        return userRepository.save(user);
+        LocalDateTime now = LocalDateTime.now();
+
+        user.setCreatedAt(now);
+        user.setUpdatedAt(now);
+
+        User savedUser = userRepository.save(user);
+        return toResponse(savedUser);
     }
 
-    public User updateUser(
-        UUID id,
-        String firstName,
-        String lastName,
-        String phoneNumber
-    ){
-        User user = getUserById(id);
-        user.setFirstName(firstName);
-        user.setLastName(lastName);
-        user.setPhoneNumber(phoneNumber);
-        user.setUpdatedAt(java.time.LocalDateTime.now());
-        return userRepository.save(user);
+    public UserResponse updateUser(
+            UUID id,
+            UpdateUserRequest request) {
+        User user = findUserById(id);
+        if (request.getFirstName() != null) {
+            user.setFirstName(request.getFirstName());
+        }
+        if (request.getLastName() != null) {
+            user.setLastName(request.getLastName());
+        }
+
+        if (request.getPhoneNumber() != null) {
+            user.setPhoneNumber(request.getPhoneNumber());
+        }
+
+        user.setUpdatedAt(LocalDateTime.now());
+        User updatedUser = userRepository.save(user);
+        return toResponse(updatedUser);
+    }
+
+    private User findUserById(UUID id) {
+        return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
+    }
+
+    private UserResponse toResponse(User user) {
+        return UserResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .phoneNumber(user.getPhoneNumber())
+                .role(user.getRole() != null ? user.getRole().getName() : null)
+                .status(user.getStatus())
+                .emailVerified(user.isEmailVerified())
+                .lastLoginAt(user.getLastLoginAt())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .build();
     }
 
 }
