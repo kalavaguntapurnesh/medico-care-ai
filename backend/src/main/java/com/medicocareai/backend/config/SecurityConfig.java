@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -49,6 +49,9 @@ public class SecurityConfig {
                 http
                                 .authenticationProvider(authenticationProvider)
                                 .csrf(AbstractHttpConfigurer::disable)
+                                .sessionManagement(session -> session.sessionCreationPolicy(
+                                        SessionCreationPolicy.STATELESS
+                                ))
                                 .authorizeHttpRequests(auth -> auth
 
                                                 .requestMatchers(
@@ -66,7 +69,14 @@ public class SecurityConfig {
                                                                 "/actuator/health")
                                                 .permitAll()
 
+                                                .requestMatchers(
+                                                        HttpMethod.GET,
+                                                        "/api/v1/users"
+                                                ).hasRole("ADMIN")
+
                                                 .anyRequest().authenticated()
+
+                                               
 
                                 ).addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
