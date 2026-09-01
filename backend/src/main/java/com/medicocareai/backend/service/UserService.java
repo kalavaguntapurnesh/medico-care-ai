@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.medicocareai.backend.dto.user.CreateUserRequest;
@@ -24,10 +25,13 @@ public class UserService {
 
     private final RoleRepository roleRepository;
 
+    private final PasswordEncoder passwordEncoder;
+
     public UserService(
-            UserRepository userRepository, RoleRepository roleRepository) {
+            UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional(readOnly = true)
@@ -50,6 +54,12 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found : " + email));
     }
 
+    @Transactional(readOnly = true)
+    public User findUserByEmail(String email) {
+        return userRepository.findByEmail(email).orElseThrow(
+                () -> new ResourceNotFoundException("user not found : " + email));
+    }
+
     public UserResponse createUser(
             CreateUserRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -62,7 +72,7 @@ public class UserService {
         User user = new User();
 
         user.setEmail(request.getEmail());
-        user.setPasswordHash(request.getPassword());
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
         user.setPhoneNumber(request.getPhoneNumber());
@@ -101,6 +111,10 @@ public class UserService {
 
     private User findUserById(UUID id) {
         return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
+    }
+
+    public void updateUser(User user) {
+        userRepository.save(user);
     }
 
     private UserResponse toResponse(User user) {
