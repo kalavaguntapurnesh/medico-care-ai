@@ -19,11 +19,9 @@ public class JwtService {
 
     public JwtService(
             @Value("${app.security.jwt.secret}") String secret,
-            @Value("${app.security.jwt.expiration-ms}") long expirationMs
-    ) {
+            @Value("${app.security.jwt.expiration-ms}") long expirationMs) {
         this.signingKey = Keys.hmacShaKeyFor(
-                Decoders.BASE64.decode(secret)
-        );
+                Decoders.BASE64.decode(secret));
 
         this.expirationMs = expirationMs;
     }
@@ -31,14 +29,12 @@ public class JwtService {
     public String generateToken(
             UUID userId,
             String email,
-            String role
-    ) {
+            String role) {
 
         Date now = new Date();
 
         Date expiration = new Date(
-                now.getTime() + expirationMs
-        );
+                now.getTime() + expirationMs);
 
         return Jwts.builder()
                 .subject(userId.toString())
@@ -56,6 +52,10 @@ public class JwtService {
                 .getSubject();
 
         return UUID.fromString(subject);
+    }
+
+    public String extractEmail(String token) {
+        return extractAllClaims(token).get("email", String.class);
     }
 
     public boolean isTokenValid(String token) {
