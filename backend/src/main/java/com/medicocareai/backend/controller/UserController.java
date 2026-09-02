@@ -14,11 +14,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.medicocareai.backend.dto.user.ChangePasswordRequest;
 import com.medicocareai.backend.dto.user.CreateUserRequest;
 import com.medicocareai.backend.dto.user.UpdateUserRequest;
+import com.medicocareai.backend.dto.user.UpdateUserStatusRequest;
 import com.medicocareai.backend.dto.user.UserResponse;
 import com.medicocareai.backend.service.UserService;
 
+import io.micrometer.core.ipc.http.HttpSender.Response;
 import jakarta.validation.Valid;
 
 @RestController
@@ -68,6 +71,21 @@ public class UserController {
             @Valid @RequestBody UpdateUserRequest request) {
         String email = authentication.getName();
         return ResponseEntity.ok(userService.updateCurrentUser(email, request));
+    }
+
+    @PutMapping("/me/password")
+    public ResponseEntity<Void> changePassword(
+            Authentication authentication,
+            @Valid @RequestBody ChangePasswordRequest request) {
+        userService.changePassword(authentication.getName(), request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<UserResponse> updateUserStatus(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateUserStatusRequest request) {
+        return ResponseEntity.ok(userService.updateUserStatus(id, request));
     }
 
 }
