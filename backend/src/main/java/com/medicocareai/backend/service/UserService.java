@@ -4,16 +4,20 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.medicocareai.backend.dto.user.ChangePasswordRequest;
 import com.medicocareai.backend.dto.user.CreateUserRequest;
 import com.medicocareai.backend.dto.user.UpdateUserRequest;
+import com.medicocareai.backend.dto.user.UpdateUserStatusRequest;
 import com.medicocareai.backend.dto.user.UserResponse;
 import com.medicocareai.backend.entity.Role;
 import com.medicocareai.backend.entity.User;
 import com.medicocareai.backend.exception.ConflictException;
 import com.medicocareai.backend.exception.ResourceNotFoundException;
+import com.medicocareai.backend.exception.BadRequestException;
 import com.medicocareai.backend.repository.RoleRepository;
 import com.medicocareai.backend.repository.UserRepository;
 import org.springframework.transaction.annotation.Transactional;
@@ -85,6 +89,39 @@ public class UserService {
             user.setPhoneNumber(request.getPhoneNumber());
         }
 
+        user.setUpdatedAt(LocalDateTime.now());
+        User updatedUser = userRepository.save(user);
+        return toResponse(updatedUser);
+    }
+
+    @Transactional
+    public void changePassword(
+        String email,
+        ChangePasswordRequest request
+    ){
+        User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
+
+        if(!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())){
+            throw new BadRequestException("Current password is incorrect");
+        }
+
+        if(passwordEncoder.matches(request.getNewPassword(), user.getPasswordHash())){
+            throw new BadRequestException("new password must be different from current password");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public UserResponse updateUserStatus(
+        UUID id,
+        UpdateUserStatusRequest request
+    ){
+        User user = findUserById(id);
+        user.setStatus(request.getStatus().name());
         user.setUpdatedAt(LocalDateTime.now());
         User updatedUser = userRepository.save(user);
         return toResponse(updatedUser);
