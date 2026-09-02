@@ -53,6 +53,7 @@ public class AuthService {
         }
         user.setLastLoginAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
+        userService.updateUser(user);
 
         String role = user.getRole() != null ? user.getRole().getName() : "USER";
 
