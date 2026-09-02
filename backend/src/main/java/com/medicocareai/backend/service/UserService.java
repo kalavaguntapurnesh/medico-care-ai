@@ -60,6 +60,36 @@ public class UserService {
                 () -> new ResourceNotFoundException("user not found : " + email));
     }
 
+    @Transactional(readOnly = true)
+    public UserResponse getUserByEmailResponse(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found : " + email));
+        return toResponse(user);
+    }
+
+    @Transactional
+    public UserResponse updateCurrentUser(
+        String email,
+        UpdateUserRequest request
+    ){
+        User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new ResourceNotFoundException("user not found : " + email));
+        if(request.getFirstName() != null){
+            user.setFirstName(request.getFirstName());
+        }
+        if(request.getLastName() != null){
+            user.setLastName(request.getLastName());
+        }
+
+        if(request.getPhoneNumber() != null){
+            user.setPhoneNumber(request.getPhoneNumber());
+        }
+
+        user.setUpdatedAt(LocalDateTime.now());
+        User updatedUser = userRepository.save(user);
+        return toResponse(updatedUser);
+    }
+
     public UserResponse createUser(
             CreateUserRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
