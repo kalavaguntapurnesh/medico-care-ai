@@ -7,9 +7,11 @@ import org.springframework.stereotype.Service;
 
 import com.medicocareai.backend.dto.doctor.CreateDoctorRequest;
 import com.medicocareai.backend.dto.doctor.DoctorResponse;
+import com.medicocareai.backend.dto.doctor.UpdateDoctorApprovalRequest;
 import com.medicocareai.backend.dto.doctor.UpdateDoctorRequest;
 import com.medicocareai.backend.entity.Doctor;
 import com.medicocareai.backend.entity.User;
+import com.medicocareai.backend.enums.DoctorApprovalStatus;
 import com.medicocareai.backend.exception.ConflictException;
 import com.medicocareai.backend.exception.ResourceNotFoundException;
 import com.medicocareai.backend.repository.DoctorRepository;
@@ -160,4 +162,28 @@ public class DoctorService {
                 .orElseThrow(() -> new ResourceNotFoundException("user not found : " + email));
         return updateDoctor(user.getId(), request);
     }
+
+
+
+    @Transactional 
+    public DoctorResponse updateDoctorApproval(
+        UUID doctorId,
+        UpdateDoctorApprovalRequest request
+    ){
+        Doctor doctor = doctorRepository.findById(doctorId).orElseThrow(() -> new ResourceNotFoundException("Doctor profile not found"));
+
+        if(request.getApprovalStatus() == DoctorApprovalStatus.PENDING){
+            throw new ConflictException("Doctor approval status cannot be changed to PENDING");
+        }
+
+        doctor.setApprovalStatus(request.getApprovalStatus().name());
+
+        doctor.setUpdatedAt(LocalDateTime.now());
+
+        Doctor updateDoctor = doctorRepository.save(doctor);
+        return toResponse(updateDoctor);
+    }
+
+
+
 }
