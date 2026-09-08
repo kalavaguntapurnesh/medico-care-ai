@@ -104,10 +104,6 @@ public class DoctorService {
             doctor.setConsultationFee(request.getConsultationFee());
         }
 
-        if (request.getConsultationFee() != null) {
-            doctor.setConsultationFee(request.getConsultationFee());
-        }
-
         if (request.getLicenseNumber() != null) {
             if (!request.getLicenseNumber().equals(doctor.getLicenseNumber())
                     && doctorRepository.existsByLicenseNumber(request.getLicenseNumber())) {
@@ -153,7 +149,12 @@ public class DoctorService {
     public DoctorResponse getDoctorByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found : " + email));
-        return getDoctorByUserId(user.getId());
+        UUID userId = user.getId();
+
+        Doctor doctor = doctorRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Doctor profile not found : " + userId));
+
+        return toResponse(doctor);
     }
 
     @Transactional
@@ -163,16 +164,14 @@ public class DoctorService {
         return updateDoctor(user.getId(), request);
     }
 
-
-
-    @Transactional 
+    @Transactional
     public DoctorResponse updateDoctorApproval(
-        UUID doctorId,
-        UpdateDoctorApprovalRequest request
-    ){
-        Doctor doctor = doctorRepository.findById(doctorId).orElseThrow(() -> new ResourceNotFoundException("Doctor profile not found"));
+            UUID doctorId,
+            UpdateDoctorApprovalRequest request) {
+        Doctor doctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Doctor profile not found"));
 
-        if(request.getApprovalStatus() == DoctorApprovalStatus.PENDING){
+        if (request.getApprovalStatus() == DoctorApprovalStatus.PENDING) {
             throw new ConflictException("Doctor approval status cannot be changed to PENDING");
         }
 
@@ -180,10 +179,22 @@ public class DoctorService {
 
         doctor.setUpdatedAt(LocalDateTime.now());
 
-        Doctor updateDoctor = doctorRepository.save(doctor);
-        return toResponse(updateDoctor);
+        Doctor updatedDoctor = doctorRepository.save(doctor);
+        return toResponse(updatedDoctor);
     }
 
+    @Transactional(readOnly = true)
+    public Doctor getApprovedDoctorByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found : " + email));
 
+        Doctor doctor = doctorRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Doctor profile not found "));
+
+        if (!DoctorApprovalStatus.APPROVED.name().equals(doctor.getApprovalStatus())) {
+            throw new ConflictException("Doctor account is not approved");
+        }
+        return doctor;
+    }
 
 }
