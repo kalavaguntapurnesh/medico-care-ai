@@ -24,7 +24,7 @@ public class DoctorResponse {
 
     private String qualification;
 
-    private String experienceYears;
+    private Integer experienceYears;
 
     private BigDecimal consultationFee;
 

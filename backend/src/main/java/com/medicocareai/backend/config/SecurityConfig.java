@@ -103,6 +103,15 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.PUT, "/api/v1/patients/me")
                                                 .hasRole("PATIENT")
 
+                                                .requestMatchers(HttpMethod.POST, "/api/v1/doctors")
+                                                .hasRole("ADMIN")
+
+                                                .requestMatchers(HttpMethod.GET, "/api/v1/doctors/me")
+                                                .hasRole("DOCTOR")
+
+                                                .requestMatchers(HttpMethod.PUT, "/api/v1/doctors/me")
+                                                .hasRole("DOCTOR")
+
                                                 .anyRequest().authenticated())
 
                                 .addFilterBefore(
