@@ -18,7 +18,7 @@ public class PasswordGenerator implements CommandLineRunner {
         );
 
         System.out.println(
-                encoder.encode("Admin123!")
+                encoder.encode("Doctor123!")
         );
     }
 }
