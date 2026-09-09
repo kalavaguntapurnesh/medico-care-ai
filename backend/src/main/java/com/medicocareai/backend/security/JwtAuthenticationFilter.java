@@ -1,7 +1,6 @@
 package com.medicocareai.backend.security;
 
 import java.io.IOException;
-import java.util.UUID;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -40,30 +39,36 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 request.getHeader("Authorization");
 
         // No Authorization header
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (authHeader == null ||
+                !authHeader.startsWith("Bearer ")) {
+
             filterChain.doFilter(request, response);
             return;
         }
 
-        final String token = authHeader.substring(7);
+        final String token =
+                authHeader.substring(7);
 
         try {
-            // Validate token
+
+            // Validate JWT
             if (!jwtService.isTokenValid(token)) {
+
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            // Extract user ID from JWT
-            // UUID userId = jwtService.extractUserId(token);
+            // Extract email from JWT
+            String email =
+                    jwtService.extractEmail(token);
 
             // Only authenticate if no authentication exists
-            if (SecurityContextHolder.getContext()
-                    .getAuthentication() == null) {
+            if (email != null &&
+                    SecurityContextHolder.getContext()
+                            .getAuthentication() == null) {
 
                 UserDetails userDetails =
-                        userDetailsService.loadUserByUsername(
-                                extractEmail(token));
+                        userDetailsService.loadUserByUsername(email);
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
@@ -82,14 +87,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
         } catch (Exception exception) {
-            // Invalid JWT - leave SecurityContext unauthenticated
+
+            // Invalid JWT or user authentication failure
             SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);
-    }
-
-    private String extractEmail(String token) {
-        return jwtService.extractEmail(token);
     }
 }
