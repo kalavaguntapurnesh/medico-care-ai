@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.medicocareai.backend.dto.appointment.AppointmentResponse;
 import com.medicocareai.backend.dto.appointment.CreateAppointmentRequest;
 import com.medicocareai.backend.dto.appointment.UpdateAppointmentStatusRequest;
+import com.medicocareai.backend.security.CustomUserPrincipal;
 import com.medicocareai.backend.service.AppointmentService;
 
 import jakarta.validation.Valid;
@@ -25,7 +26,7 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/v1/appointments")
 public class AppointmentController {
     private final AppointmentService appointmentService;
-    
+
     public AppointmentController(
             AppointmentService appointmentService) {
         this.appointmentService = appointmentService;
@@ -35,7 +36,6 @@ public class AppointmentController {
     public ResponseEntity<AppointmentResponse> createAppointment(
             Authentication authentication,
             @Valid @RequestBody CreateAppointmentRequest request) {
-        String email = authentication.getName();
 
         UUID patientUserId = getUserId(authentication);
 
@@ -92,13 +92,13 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.updateAppointmentStatus(doctorUserId, id, request));
     }
 
-    private UUID getUserId(Authentication authentication) {
-        Object principal = authentication.getPrincipal();
+    // helper
 
-        if (principal instanceof org.springframework.security.core.userdetails.User user) {
-            throw new IllegalStateException(
-                    "User ID is not available from the current authentication principal");
-        }
-        throw new IllegalStateException("Unable to determine authenticated user");
+    private UUID getUserId(Authentication authentication) {
+
+        CustomUserPrincipal principal = (CustomUserPrincipal) authentication.getPrincipal();
+
+        return principal.getUserId();
+
     }
 }

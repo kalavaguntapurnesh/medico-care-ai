@@ -124,6 +124,41 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.PUT, "/api/v1/doctors/me")
                                                 .hasRole("DOCTOR")
 
+                                                .requestMatchers(
+                                                                HttpMethod.POST,
+                                                                "/api/v1/appointments")
+                                                .hasRole("PATIENT")
+
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/api/v1/appointments/me")
+                                                .hasRole("PATIENT")
+
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/api/v1/appointments/me/*")
+                                                .hasRole("PATIENT")
+
+                                                .requestMatchers(
+                                                                HttpMethod.PUT,
+                                                                "/api/v1/appointments/me/*/cancel")
+                                                .hasRole("PATIENT")
+
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/api/v1/appointments/doctor/me")
+                                                .hasRole("DOCTOR")
+
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/api/v1/appointments/doctor/me/*")
+                                                .hasRole("DOCTOR")
+
+                                                .requestMatchers(
+                                                                HttpMethod.PUT,
+                                                                "/api/v1/appointments/doctor/me/*/status")
+                                                .hasRole("DOCTOR")
+
                                                 .anyRequest().authenticated())
 
                                 .addFilterBefore(
