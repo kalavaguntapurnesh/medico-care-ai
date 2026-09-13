@@ -9,11 +9,14 @@ import org.springframework.stereotype.Service;
 import com.medicocareai.backend.dto.medicalrecord.CreateMedicalRecordRequest;
 import com.medicocareai.backend.dto.medicalrecord.MedicalRecordResponse;
 import com.medicocareai.backend.dto.medicalrecord.UpdateMedicalRecordRequest;
+import com.medicocareai.backend.entity.Doctor;
 import com.medicocareai.backend.entity.MedicalRecord;
 import com.medicocareai.backend.entity.Patient;
 import com.medicocareai.backend.entity.User;
 import com.medicocareai.backend.exception.ConflictException;
 import com.medicocareai.backend.exception.ResourceNotFoundException;
+import com.medicocareai.backend.repository.AppointmentRepository;
+import com.medicocareai.backend.repository.DoctorRepository;
 import com.medicocareai.backend.repository.MedicalRecordRepository;
 import com.medicocareai.backend.repository.PatientRepository;
 import com.medicocareai.backend.repository.UserRepository;
@@ -24,16 +27,21 @@ import org.springframework.transaction.annotation.Transactional;
 public class MedicalRecordService {
     private final MedicalRecordRepository medicalRecordRepository;
     private final PatientRepository patientRepository;
-
+    private final DoctorRepository doctorRepository;
+    private final AppointmentRepository appointmentRepository;
     private final UserRepository userRepository;
 
     public MedicalRecordService(
             MedicalRecordRepository medicalRecordRepository,
             PatientRepository patientRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            DoctorRepository doctorRepository,
+            AppointmentRepository appointmentRepository) {
         this.medicalRecordRepository = medicalRecordRepository;
         this.patientRepository = patientRepository;
         this.userRepository = userRepository;
+        this.doctorRepository = doctorRepository;
+        this.appointmentRepository = appointmentRepository;
     }
 
     // creating a medical record for the authenticated patient
@@ -234,5 +242,35 @@ public class MedicalRecordService {
                 .updatedAt(medicalRecord.getUpdatedAt())
                 .deletedAt(medicalRecord.getDeletedAt())
                 .build();
+    }
+
+    // getting medical records to doctor only their treated patients
+    @Transactional(readOnly = true)
+    public List<MedicalRecordResponse> getPatientMedicalRecordsForDoctor(
+            UUID doctorUserId,
+            UUID patientId) {
+
+        Doctor doctor = doctorRepository.findByUserId(doctorUserId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Doctor profile not found"));
+
+        Patient patient = patientRepository.findById(patientId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Patient profile not found"));
+
+        boolean hasAppointment = appointmentRepository.existsByDoctorIdAndPatientId(
+                doctor.getId(),
+                patient.getId());
+
+        if (!hasAppointment) {
+            throw new ResourceNotFoundException(
+                    "Patient not found");
+        }
+
+        return medicalRecordRepository
+                .findByPatientIdAndDeletedAtIsNull(patient.getId())
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 }
