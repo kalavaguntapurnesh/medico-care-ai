@@ -183,6 +183,31 @@ public class SecurityConfig {
                                                                 "/api/v1/medical-records/patient/*")
                                                 .hasRole("DOCTOR")
 
+                                                .requestMatchers(
+                                                                HttpMethod.POST,
+                                                                "/api/v1/prescriptions")
+                                                .hasRole("DOCTOR")
+
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/api/v1/prescriptions/me")
+                                                .hasRole("PATIENT")
+
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/api/v1/prescriptions/me/*")
+                                                .hasRole("PATIENT")
+
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/api/v1/prescriptions/doctor/me")
+                                                .hasRole("DOCTOR")
+
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/api/v1/prescriptions/doctor/me/*")
+                                                .hasRole("DOCTOR")
+
                                                 .anyRequest().authenticated())
 
                                 .addFilterBefore(
