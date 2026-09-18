@@ -253,6 +253,26 @@ public class SecurityConfig {
                                                                 "/api/v1/medicine-reminders/me/*")
                                                 .hasRole("PATIENT")
 
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/api/v1/notifications/me")
+                                                .authenticated()
+
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/api/v1/notifications/me/unread")
+                                                .authenticated()
+
+                                                .requestMatchers(
+                                                                HttpMethod.PATCH,
+                                                                "/api/v1/notifications/me/*/read")
+                                                .authenticated()
+
+                                                .requestMatchers(
+                                                                HttpMethod.PATCH,
+                                                                "/api/v1/notifications/me/read-all")
+                                                .authenticated()
+
                                                 .anyRequest().authenticated())
 
                                 .addFilterBefore(
