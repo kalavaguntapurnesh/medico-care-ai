@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.medicocareai.backend.dto.appointment.AppointmentResponse;
 import com.medicocareai.backend.dto.appointment.CreateAppointmentRequest;
 import com.medicocareai.backend.dto.appointment.UpdateAppointmentStatusRequest;
+import com.medicocareai.backend.dto.notification.CreateNotificationRequest;
 import com.medicocareai.backend.entity.Appointment;
 import com.medicocareai.backend.entity.Doctor;
 import com.medicocareai.backend.entity.Patient;
@@ -25,314 +26,421 @@ import com.medicocareai.backend.repository.PatientRepository;
 @Transactional
 public class AppointmentService {
 
-    private final AppointmentRepository appointmentRepository;
-    private final PatientRepository patientRepository;
-    private final DoctorRepository doctorRepository;
+        private final AppointmentRepository appointmentRepository;
+        private final PatientRepository patientRepository;
+        private final DoctorRepository doctorRepository;
 
-    public AppointmentService(
-            AppointmentRepository appointmentRepository,
-            PatientRepository patientRepository,
-            DoctorRepository doctorRepository) {
+        private final NotificationService notificationService;
 
-        this.appointmentRepository = appointmentRepository;
-        this.patientRepository = patientRepository;
-        this.doctorRepository = doctorRepository;
-    }
+        public AppointmentService(
+                        AppointmentRepository appointmentRepository,
+                        PatientRepository patientRepository,
+                        DoctorRepository doctorRepository,
+                        NotificationService notificationService) {
 
-    @Transactional
-    public AppointmentResponse createAppointment(
-            UUID patientUserId,
-            CreateAppointmentRequest request) {
-
-        Patient patient = patientRepository.findByUserId(patientUserId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Patient profile not found"));
-
-        Doctor doctor = doctorRepository.findById(request.getDoctorId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Doctor profile not found"));
-
-        if (!DoctorApprovalStatus.APPROVED.name()
-                .equals(doctor.getApprovalStatus())) {
-
-            throw new ConflictException(
-                    "Doctor is not approved for appointments");
+                this.appointmentRepository = appointmentRepository;
+                this.patientRepository = patientRepository;
+                this.doctorRepository = doctorRepository;
+                this.notificationService = notificationService;
         }
 
-        if (!request.getStartTime().isBefore(request.getEndTime())) {
-            throw new ConflictException(
-                    "Start time must be before end time");
+        @Transactional
+        public AppointmentResponse createAppointment(
+                        UUID patientUserId,
+                        CreateAppointmentRequest request) {
+
+                Patient patient = patientRepository.findByUserId(patientUserId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Patient profile not found"));
+
+                Doctor doctor = doctorRepository.findById(request.getDoctorId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Doctor profile not found"));
+
+                if (!DoctorApprovalStatus.APPROVED.name()
+                                .equals(doctor.getApprovalStatus())) {
+
+                        throw new ConflictException(
+                                        "Doctor is not approved for appointments");
+                }
+
+                if (!request.getStartTime().isBefore(request.getEndTime())) {
+                        throw new ConflictException(
+                                        "Start time must be before end time");
+                }
+
+                boolean overlappingAppointment = appointmentRepository
+                                .existsByDoctorIdAndAppointmentDateAndStartTimeLessThanAndEndTimeGreaterThan(
+                                                doctor.getId(),
+                                                request.getAppointmentDate(),
+                                                request.getEndTime(),
+                                                request.getStartTime());
+
+                if (overlappingAppointment) {
+                        throw new ConflictException(
+                                        "Doctor already has an appointment during this time");
+                }
+
+                Appointment appointment = new Appointment();
+
+                appointment.setPatient(patient);
+                appointment.setDoctor(doctor);
+                appointment.setAppointmentDate(request.getAppointmentDate());
+                appointment.setStartTime(request.getStartTime());
+                appointment.setEndTime(request.getEndTime());
+                appointment.setStatus(AppointmentStatus.PENDING.name());
+                appointment.setReason(request.getReason());
+                appointment.setNotes(request.getNotes());
+
+                LocalDateTime now = LocalDateTime.now();
+
+                appointment.setCreatedAt(now);
+                appointment.setUpdatedAt(now);
+
+                Appointment savedAppointment = appointmentRepository.save(appointment);
+
+                CreateNotificationRequest notificationRequest = new CreateNotificationRequest();
+
+                notificationRequest.setUserId(
+                                doctor.getUser().getId());
+
+                notificationRequest.setType("APPOINTMENT");
+
+                notificationRequest.setTitle("New Appointment Request");
+
+                notificationRequest.setUserId(
+                                doctor.getUser().getId());
+
+                notificationRequest.setReferenceType("APPOINTMENT");
+                notificationRequest.setReferenceId(savedAppointment.getId());
+
+                notificationService.createNotification(notificationRequest);
+
+                return toResponse(savedAppointment);
+
         }
 
-        boolean overlappingAppointment = appointmentRepository
-                .existsByDoctorIdAndAppointmentDateAndStartTimeLessThanAndEndTimeGreaterThan(
-                        doctor.getId(),
-                        request.getAppointmentDate(),
-                        request.getEndTime(),
-                        request.getStartTime());
+        @Transactional(readOnly = true)
+        public List<AppointmentResponse> getPatientAppointments(
+                        UUID patientUserId) {
 
-        if (overlappingAppointment) {
-            throw new ConflictException(
-                    "Doctor already has an appointment during this time");
+                Patient patient = patientRepository.findByUserId(patientUserId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Patient profile not found"));
+
+                return appointmentRepository
+                                .findByPatientId(patient.getId())
+                                .stream()
+                                .map(this::toResponse)
+                                .toList();
         }
 
-        Appointment appointment = new Appointment();
+        @Transactional(readOnly = true)
+        public List<AppointmentResponse> getDoctorAppointments(
+                        UUID doctorUserId) {
 
-        appointment.setPatient(patient);
-        appointment.setDoctor(doctor);
-        appointment.setAppointmentDate(request.getAppointmentDate());
-        appointment.setStartTime(request.getStartTime());
-        appointment.setEndTime(request.getEndTime());
-        appointment.setStatus(AppointmentStatus.PENDING.name());
-        appointment.setReason(request.getReason());
-        appointment.setNotes(request.getNotes());
+                Doctor doctor = doctorRepository.findByUserId(doctorUserId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Doctor profile not found"));
 
-        LocalDateTime now = LocalDateTime.now();
-
-        appointment.setCreatedAt(now);
-        appointment.setUpdatedAt(now);
-
-        Appointment savedAppointment = appointmentRepository.save(appointment);
-
-        return toResponse(savedAppointment);
-    }
-
-    @Transactional(readOnly = true)
-    public List<AppointmentResponse> getPatientAppointments(
-            UUID patientUserId) {
-
-        Patient patient = patientRepository.findByUserId(patientUserId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Patient profile not found"));
-
-        return appointmentRepository
-                .findByPatientId(patient.getId())
-                .stream()
-                .map(this::toResponse)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public List<AppointmentResponse> getDoctorAppointments(
-            UUID doctorUserId) {
-
-        Doctor doctor = doctorRepository.findByUserId(doctorUserId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Doctor profile not found"));
-
-        return appointmentRepository
-                .findByDoctorId(doctor.getId())
-                .stream()
-                .map(this::toResponse)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public AppointmentResponse getPatientAppointment(
-            UUID patientUserId,
-            UUID appointmentId) {
-
-        Patient patient = patientRepository.findByUserId(patientUserId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Patient profile not found"));
-
-        Appointment appointment = appointmentRepository
-                .findByIdAndPatientId(
-                        appointmentId,
-                        patient.getId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Appointment not found"));
-
-        return toResponse(appointment);
-    }
-
-    @Transactional(readOnly = true)
-    public AppointmentResponse getDoctorAppointment(
-            UUID doctorUserId,
-            UUID appointmentId) {
-
-        Doctor doctor = doctorRepository.findByUserId(doctorUserId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Doctor profile not found"));
-
-        Appointment appointment = appointmentRepository
-                .findByIdAndDoctorId(
-                        appointmentId,
-                        doctor.getId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Appointment not found"));
-
-        return toResponse(appointment);
-    }
-
-    @Transactional
-    public AppointmentResponse updateAppointmentStatus(
-            UUID doctorUserId,
-            UUID appointmentId,
-            UpdateAppointmentStatusRequest request) {
-
-        Doctor doctor = doctorRepository.findByUserId(doctorUserId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Doctor profile not found"));
-
-        Appointment appointment = appointmentRepository
-                .findByIdAndDoctorId(
-                        appointmentId,
-                        doctor.getId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Appointment not found"));
-
-        AppointmentStatus requestedStatus = request.getStatus();
-
-        if (requestedStatus == AppointmentStatus.PENDING) {
-            throw new ConflictException(
-                    "Doctor cannot change appointment status to PENDING");
+                return appointmentRepository
+                                .findByDoctorId(doctor.getId())
+                                .stream()
+                                .map(this::toResponse)
+                                .toList();
         }
 
-        AppointmentStatus currentStatus = AppointmentStatus.valueOf(
-                appointment.getStatus());
+        @Transactional(readOnly = true)
+        public AppointmentResponse getPatientAppointment(
+                        UUID patientUserId,
+                        UUID appointmentId) {
 
-        validateDoctorStatusTransition(
-                currentStatus,
-                requestedStatus);
+                Patient patient = patientRepository.findByUserId(patientUserId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Patient profile not found"));
 
-        appointment.setStatus(
-                requestedStatus.name());
+                Appointment appointment = appointmentRepository
+                                .findByIdAndPatientId(
+                                                appointmentId,
+                                                patient.getId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Appointment not found"));
 
-        appointment.setUpdatedAt(
-                LocalDateTime.now());
-
-        Appointment updatedAppointment = appointmentRepository.save(appointment);
-
-        return toResponse(updatedAppointment);
-    }
-
-    @Transactional
-    public AppointmentResponse cancelAppointment(
-            UUID patientUserId,
-            UUID appointmentId) {
-
-        Patient patient = patientRepository.findByUserId(patientUserId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Patient profile not found"));
-
-        Appointment appointment = appointmentRepository
-                .findByIdAndPatientId(
-                        appointmentId,
-                        patient.getId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Appointment not found"));
-
-        AppointmentStatus currentStatus = AppointmentStatus.valueOf(
-                appointment.getStatus());
-
-        if (currentStatus == AppointmentStatus.COMPLETED) {
-            throw new ConflictException(
-                    "Completed appointment cannot be cancelled");
+                return toResponse(appointment);
         }
 
-        if (currentStatus == AppointmentStatus.CANCELLED) {
-            throw new ConflictException(
-                    "Appointment is already cancelled");
+        @Transactional(readOnly = true)
+        public AppointmentResponse getDoctorAppointment(
+                        UUID doctorUserId,
+                        UUID appointmentId) {
+
+                Doctor doctor = doctorRepository.findByUserId(doctorUserId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Doctor profile not found"));
+
+                Appointment appointment = appointmentRepository
+                                .findByIdAndDoctorId(
+                                                appointmentId,
+                                                doctor.getId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Appointment not found"));
+
+                return toResponse(appointment);
         }
 
-        appointment.setStatus(
-                AppointmentStatus.CANCELLED.name());
+        @Transactional
+        public AppointmentResponse updateAppointmentStatus(
+                        UUID doctorUserId,
+                        UUID appointmentId,
+                        UpdateAppointmentStatusRequest request) {
 
-        appointment.setUpdatedAt(
-                LocalDateTime.now());
+                Doctor doctor = doctorRepository.findByUserId(doctorUserId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Doctor profile not found"));
 
-        Appointment cancelledAppointment = appointmentRepository.save(appointment);
+                Appointment appointment = appointmentRepository
+                                .findByIdAndDoctorId(
+                                                appointmentId,
+                                                doctor.getId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Appointment not found"));
 
-        return toResponse(cancelledAppointment);
-    }
+                AppointmentStatus requestedStatus = request.getStatus();
 
-    private void validateDoctorStatusTransition(
-            AppointmentStatus currentStatus,
-            AppointmentStatus requestedStatus) {
+                if (requestedStatus == AppointmentStatus.PENDING) {
+                        throw new ConflictException(
+                                        "Doctor cannot change appointment status to PENDING");
+                }
 
-        if (currentStatus == AppointmentStatus.CANCELLED) {
-            throw new ConflictException(
-                    "Cancelled appointment cannot be modified");
+                AppointmentStatus currentStatus = AppointmentStatus.valueOf(
+                                appointment.getStatus());
+
+                validateDoctorStatusTransition(
+                                currentStatus,
+                                requestedStatus);
+
+                appointment.setStatus(
+                                requestedStatus.name());
+
+                appointment.setUpdatedAt(
+                                LocalDateTime.now());
+
+                Appointment updatedAppointment = appointmentRepository.save(appointment);
+
+                CreateNotificationRequest notificationRequest = new CreateNotificationRequest();
+
+                notificationRequest.setUserId(
+                                appointment.getPatient().getUser().getId());
+
+                notificationRequest.setType("APPOINTMENT");
+
+                notificationRequest.setReferenceType("APPOINTMENT");
+                notificationRequest.setReferenceId(
+                                updatedAppointment.getId());
+
+                if (requestedStatus == AppointmentStatus.CONFIRMED) {
+
+                        notificationRequest.setTitle(
+                                        "Appointment Confirmed");
+
+                        notificationRequest.setMessage(
+                                        "Your appointment with Dr. "
+                                                        + doctor.getUser().getFirstName()
+                                                        + " "
+                                                        + doctor.getUser().getLastName()
+                                                        + " on "
+                                                        + appointment.getAppointmentDate()
+                                                        + " at "
+                                                        + appointment.getStartTime()
+                                                        + " has been confirmed.");
+
+                } else if (requestedStatus == AppointmentStatus.REJECTED) {
+
+                        notificationRequest.setTitle(
+                                        "Appointment Rejected");
+
+                        notificationRequest.setMessage(
+                                        "Your appointment request with Dr. "
+                                                        + doctor.getUser().getFirstName()
+                                                        + " "
+                                                        + doctor.getUser().getLastName()
+                                                        + " on "
+                                                        + appointment.getAppointmentDate()
+                                                        + " at "
+                                                        + appointment.getStartTime()
+                                                        + " has been rejected.");
+
+                } else if (requestedStatus == AppointmentStatus.COMPLETED) {
+
+                        notificationRequest.setTitle(
+                                        "Appointment Completed");
+
+                        notificationRequest.setMessage(
+                                        "Your appointment with Dr. "
+                                                        + doctor.getUser().getFirstName()
+                                                        + " "
+                                                        + doctor.getUser().getLastName()
+                                                        + " has been completed.");
+
+                } else {
+                        return toResponse(updatedAppointment);
+                }
+
+                notificationService.createNotification(
+                                notificationRequest);
+
+                return toResponse(updatedAppointment);
+
         }
 
-        if (currentStatus == AppointmentStatus.COMPLETED) {
-            throw new ConflictException(
-                    "Completed appointment cannot be modified");
+        @Transactional
+        public AppointmentResponse cancelAppointment(
+                        UUID patientUserId,
+                        UUID appointmentId) {
+
+                Patient patient = patientRepository.findByUserId(patientUserId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Patient profile not found"));
+
+                Appointment appointment = appointmentRepository
+                                .findByIdAndPatientId(
+                                                appointmentId,
+                                                patient.getId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Appointment not found"));
+
+                AppointmentStatus currentStatus = AppointmentStatus.valueOf(
+                                appointment.getStatus());
+
+                if (currentStatus == AppointmentStatus.COMPLETED) {
+                        throw new ConflictException(
+                                        "Completed appointment cannot be cancelled");
+                }
+
+                if (currentStatus == AppointmentStatus.CANCELLED) {
+                        throw new ConflictException(
+                                        "Appointment is already cancelled");
+                }
+
+                appointment.setStatus(
+                                AppointmentStatus.CANCELLED.name());
+
+                appointment.setUpdatedAt(
+                                LocalDateTime.now());
+
+                Appointment cancelledAppointment = appointmentRepository.save(appointment);
+
+                CreateNotificationRequest notificationRequest = new CreateNotificationRequest();
+
+                notificationRequest.setUserId(appointment.getDoctor().getUser().getId());
+
+                notificationRequest.setType("APPOINTMENT");
+
+                notificationRequest.setTitle("APPOINTMENT");
+
+                notificationRequest.setMessage(
+                                "The Appointment with " + patient.getUser().getFirstName() + " "
+                                                + patient.getUser().getLastName() + " on "
+                                                + appointment.getAppointmentDate() + " at " + appointment.getStartTime()
+                                                + " has been cancelled by the patient");
+
+                notificationRequest.setReferenceType("APPOINTMENT");
+
+                notificationRequest.setReferenceId(
+                                cancelledAppointment.getId());
+
+                notificationService.createNotification(
+                                notificationRequest);
+
+                return toResponse(cancelledAppointment);
         }
 
-        if (currentStatus == AppointmentStatus.PENDING) {
+        private void validateDoctorStatusTransition(
+                        AppointmentStatus currentStatus,
+                        AppointmentStatus requestedStatus) {
 
-            if (requestedStatus != AppointmentStatus.CONFIRMED
-                    && requestedStatus != AppointmentStatus.REJECTED) {
+                if (currentStatus == AppointmentStatus.CANCELLED) {
+                        throw new ConflictException(
+                                        "Cancelled appointment cannot be modified");
+                }
 
-                throw new ConflictException(
-                        "Pending appointment can only be confirmed or rejected");
-            }
+                if (currentStatus == AppointmentStatus.COMPLETED) {
+                        throw new ConflictException(
+                                        "Completed appointment cannot be modified");
+                }
 
-            return;
+                if (currentStatus == AppointmentStatus.PENDING) {
+
+                        if (requestedStatus != AppointmentStatus.CONFIRMED
+                                        && requestedStatus != AppointmentStatus.REJECTED) {
+
+                                throw new ConflictException(
+                                                "Pending appointment can only be confirmed or rejected");
+                        }
+
+                        return;
+                }
+
+                if (currentStatus == AppointmentStatus.CONFIRMED) {
+
+                        if (requestedStatus != AppointmentStatus.COMPLETED
+                                        && requestedStatus != AppointmentStatus.CANCELLED) {
+
+                                throw new ConflictException(
+                                                "Confirmed appointment can only be completed or cancelled");
+                        }
+                }
         }
 
-        if (currentStatus == AppointmentStatus.CONFIRMED) {
+        private AppointmentResponse toResponse(
+                        Appointment appointment) {
 
-            if (requestedStatus != AppointmentStatus.COMPLETED
-                    && requestedStatus != AppointmentStatus.CANCELLED) {
+                Patient patient = appointment.getPatient();
+                Doctor doctor = appointment.getDoctor();
 
-                throw new ConflictException(
-                        "Confirmed appointment can only be completed or cancelled");
-            }
+                return AppointmentResponse.builder()
+                                .id(appointment.getId())
+
+                                .patientId(patient.getId())
+                                .doctorId(doctor.getId())
+
+                                .patientEmail(
+                                                patient.getUser().getEmail())
+                                .patientFirstName(
+                                                patient.getUser().getFirstName())
+                                .patientLastName(
+                                                patient.getUser().getLastName())
+
+                                .doctorEmail(
+                                                doctor.getUser().getEmail())
+                                .doctorFirstName(
+                                                doctor.getUser().getFirstName())
+                                .doctorLastName(
+                                                doctor.getUser().getLastName())
+                                .doctorSpecialization(
+                                                doctor.getSpecialization())
+
+                                .appointmentDate(
+                                                appointment.getAppointmentDate())
+
+                                .startTime(
+                                                appointment.getStartTime())
+                                .endTime(
+                                                appointment.getEndTime())
+
+                                .status(
+                                                appointment.getStatus())
+
+                                .reason(
+                                                appointment.getReason())
+                                .notes(
+                                                appointment.getNotes())
+
+                                .createdAt(
+                                                appointment.getCreatedAt())
+                                .updatedAt(
+                                                appointment.getUpdatedAt())
+
+                                .build();
         }
-    }
-
-    private AppointmentResponse toResponse(
-            Appointment appointment) {
-
-        Patient patient = appointment.getPatient();
-        Doctor doctor = appointment.getDoctor();
-
-        return AppointmentResponse.builder()
-                .id(appointment.getId())
-
-                .patientId(patient.getId())
-                .doctorId(doctor.getId())
-
-                .patientEmail(
-                        patient.getUser().getEmail())
-                .patientFirstName(
-                        patient.getUser().getFirstName())
-                .patientLastName(
-                        patient.getUser().getLastName())
-
-                .doctorEmail(
-                        doctor.getUser().getEmail())
-                .doctorFirstName(
-                        doctor.getUser().getFirstName())
-                .doctorLastName(
-                        doctor.getUser().getLastName())
-                .doctorSpecialization(
-                        doctor.getSpecialization())
-
-                .appointmentDate(
-                        appointment.getAppointmentDate())
-
-                .startTime(
-                        appointment.getStartTime())
-                .endTime(
-                        appointment.getEndTime())
-
-                .status(
-                        appointment.getStatus())
-
-                .reason(
-                        appointment.getReason())
-                .notes(
-                        appointment.getNotes())
-
-                .createdAt(
-                        appointment.getCreatedAt())
-                .updatedAt(
-                        appointment.getUpdatedAt())
-
-                .build();
-    }
 }
