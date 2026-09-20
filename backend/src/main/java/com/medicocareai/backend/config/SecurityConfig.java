@@ -183,6 +183,8 @@ public class SecurityConfig {
                                                                 "/api/v1/medical-records/patient/*")
                                                 .hasRole("DOCTOR")
 
+                                                // prescriptions
+
                                                 .requestMatchers(
                                                                 HttpMethod.POST,
                                                                 "/api/v1/prescriptions")
@@ -208,6 +210,8 @@ public class SecurityConfig {
                                                                 "/api/v1/prescriptions/doctor/me/*")
                                                 .hasRole("DOCTOR")
 
+                                                // doctors availablility
+
                                                 .requestMatchers(
                                                                 HttpMethod.POST,
                                                                 "/api/v1/doctors/me/availability")
@@ -227,6 +231,8 @@ public class SecurityConfig {
                                                                 HttpMethod.DELETE,
                                                                 "/api/v1/doctors/me/availability/*")
                                                 .hasRole("DOCTOR")
+
+                                                // reminders
 
                                                 .requestMatchers(
                                                                 HttpMethod.POST,
@@ -253,6 +259,8 @@ public class SecurityConfig {
                                                                 "/api/v1/medicine-reminders/me/*")
                                                 .hasRole("PATIENT")
 
+                                                // notifications
+
                                                 .requestMatchers(
                                                                 HttpMethod.GET,
                                                                 "/api/v1/notifications/me")
@@ -272,6 +280,8 @@ public class SecurityConfig {
                                                                 HttpMethod.PATCH,
                                                                 "/api/v1/notifications/me/read-all")
                                                 .authenticated()
+
+                                                // clinics
 
                                                 .requestMatchers(
                                                                 HttpMethod.POST,
@@ -296,6 +306,18 @@ public class SecurityConfig {
                                                 .requestMatchers(
                                                                 HttpMethod.DELETE,
                                                                 "/api/v1/clinics/*")
+                                                .hasRole("ADMIN")
+
+                                                // audit-logs
+
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/api/v1/audit-logs")
+                                                .hasRole("ADMIN")
+
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/api/v1/audit-logs/**")
                                                 .hasRole("ADMIN")
 
                                                 .anyRequest().authenticated())
