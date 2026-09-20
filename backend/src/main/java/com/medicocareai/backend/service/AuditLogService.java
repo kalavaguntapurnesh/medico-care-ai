@@ -141,4 +141,26 @@ public class AuditLogService {
 
         return response;
     }
+
+    public void log(
+        UUID userId,
+        String action,
+        String entityType,
+        UUID entityId,
+        String ipAddress,
+        String userAgent,
+        String metadata
+
+    ){
+        CreateAuditLogRequest request = new CreateAuditLogRequest();
+
+        request.setUserId(userId);
+        request.setAction(action);
+        request.setEntityType(entityType);
+        request.setEntityId(entityId);
+        request.setIpAddress(ipAddress);
+        request.setUserAgent(userAgent);
+        request.setMetadata(metadata);
+        createAuditLog(request);
+    }
 }
