@@ -16,6 +16,9 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 @Entity
 @Table(name = "audit_logs")
 @Getter
@@ -45,7 +48,8 @@ public class AuditLog {
     @Column(name = "user_agent", columnDefinition = "TEXT")
     private String userAgent;
 
-    @Column(columnDefinition = "JSONB")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
     private String metadata;
 
     @Column(name = "created_at", nullable = false)

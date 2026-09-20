@@ -12,6 +12,7 @@ import com.medicocareai.backend.dto.auth.LoginRequest;
 import com.medicocareai.backend.dto.auth.LoginResponse;
 import com.medicocareai.backend.service.AuthService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @RestController
@@ -26,7 +27,8 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
-            @Valid @RequestBody LoginRequest request) {
-        return ResponseEntity.ok(authService.login(request));
+            @Valid @RequestBody LoginRequest request,
+            HttpServletRequest httpServletRequest) {
+        return ResponseEntity.ok(authService.login(request, httpServletRequest));
     }
 }
