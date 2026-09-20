@@ -273,6 +273,31 @@ public class SecurityConfig {
                                                                 "/api/v1/notifications/me/read-all")
                                                 .authenticated()
 
+                                                .requestMatchers(
+                                                                HttpMethod.POST,
+                                                                "/api/v1/clinics")
+                                                .hasRole("ADMIN")
+
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/api/v1/clinics")
+                                                .authenticated()
+
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/api/v1/clinics/**")
+                                                .authenticated()
+
+                                                .requestMatchers(
+                                                                HttpMethod.PUT,
+                                                                "/api/v1/clinics/*")
+                                                .hasRole("ADMIN")
+
+                                                .requestMatchers(
+                                                                HttpMethod.DELETE,
+                                                                "/api/v1/clinics/*")
+                                                .hasRole("ADMIN")
+
                                                 .anyRequest().authenticated())
 
                                 .addFilterBefore(
