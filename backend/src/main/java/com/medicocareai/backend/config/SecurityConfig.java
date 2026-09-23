@@ -52,6 +52,9 @@ public class SecurityConfig {
                 http
                                 .authenticationProvider(authenticationProvider)
 
+                                .cors(cors -> {
+                                })
+
                                 .csrf(AbstractHttpConfigurer::disable)
 
                                 .sessionManagement(session -> session
