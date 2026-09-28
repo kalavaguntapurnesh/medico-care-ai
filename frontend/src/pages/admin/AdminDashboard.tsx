@@ -1,29 +1,59 @@
-import { useAuth } from "../../context/AuthContext";
-
-
 export default function AdminDashboard() {
-    const { user, logout } = useAuth();
-
     return (
-        <div className="min-h-screen bg-slate-50 p-8">
-            <div className="mx-auto max-w-7xl">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1>Admin Dashboard</h1>
+        <div>
+            <div className="mb-8">
+                <h1 className="text-2xl font-bold text-slate-900">
+                    Admin Dashboard
+                </h1>
 
-                        <p className="mt-2 text-slate-500">
-                            Welcome, {user?.email}
-                        </p>
-                    </div>
-
-                    <button
-                        onClick={logout}
-                        className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
-                    >
-                        Logout
-                    </button>
-                </div>
+                <p className="mt-1 text-sm text-slate-500">
+                    Manage the Medico Care AI platform.
+                </p>
             </div>
+
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <DashboardCard
+                    title="Users"
+                    value="0"
+                />
+
+                <DashboardCard
+                    title="Doctors"
+                    value="0"
+                />
+
+                <DashboardCard
+                    title="Clinics"
+                    value="0"
+                />
+
+                <DashboardCard
+                    title="Audit Logs"
+                    value="0"
+                />
+            </div>
+        </div>
+    )
+}
+
+interface DashboardCardProps {
+    title: string
+    value: string
+}
+
+function DashboardCard({
+    title,
+    value,
+}: DashboardCardProps) {
+    return (
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-sm font-medium text-slate-500">
+                {title}
+            </p>
+
+            <p className="mt-3 text-3xl font-bold text-slate-900">
+                {value}
+            </p>
         </div>
     )
 }
