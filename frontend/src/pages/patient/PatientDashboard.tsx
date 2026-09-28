@@ -1,34 +1,59 @@
-import { useAuth } from "../../context/AuthContext";
-
-
 export default function PatientDashboard() {
-    const { user, logout } = useAuth();
-
     return (
-        <div className="min-h-screen bg-slate-50 p-8">
+        <div>
+            <div className="mb-8">
+                <h1 className="text-2xl font-bold text-slate-900">
+                    Patient Dashboard
+                </h1>
 
-            <div className="mx-auto max-w-7xl">
+                <p className="mt-1 text-sm text-slate-500">
+                    Overview of your healthcare activity.
+                </p>
+            </div>
 
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-bold text-slate-900">Patient Dashboard</h1>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <DashboardCard
+                    title="Appointments"
+                    value="0"
+                />
 
-                        <p className="mt-2 text-slate-500">
-                            Welcome, {user?.email}
-                        </p>
-                    </div>
+                <DashboardCard
+                    title="Medical Records"
+                    value="0"
+                />
 
-                    <button
-                        onClick={logout}
-                        className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
-                    >
-                        Logout
-                    </button>
+                <DashboardCard
+                    title="Prescriptions"
+                    value="0"
+                />
 
-                </div>
-
+                <DashboardCard
+                    title="Reminders"
+                    value="0"
+                />
             </div>
         </div>
     )
 }
 
+interface DashboardCardProps {
+    title: string
+    value: string
+}
+
+function DashboardCard({
+    title,
+    value,
+}: DashboardCardProps) {
+    return (
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-sm font-medium text-slate-500">
+                {title}
+            </p>
+
+            <p className="mt-3 text-3xl font-bold text-slate-900">
+                {value}
+            </p>
+        </div>
+    )
+}
