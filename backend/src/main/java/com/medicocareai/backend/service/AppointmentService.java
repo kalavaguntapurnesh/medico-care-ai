@@ -1,6 +1,8 @@
 package com.medicocareai.backend.service;
 
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,12 +15,14 @@ import com.medicocareai.backend.dto.appointment.UpdateAppointmentStatusRequest;
 import com.medicocareai.backend.dto.notification.CreateNotificationRequest;
 import com.medicocareai.backend.entity.Appointment;
 import com.medicocareai.backend.entity.Doctor;
+import com.medicocareai.backend.entity.DoctorAvailability;
 import com.medicocareai.backend.entity.Patient;
 import com.medicocareai.backend.enums.AppointmentStatus;
 import com.medicocareai.backend.enums.DoctorApprovalStatus;
 import com.medicocareai.backend.exception.ConflictException;
 import com.medicocareai.backend.exception.ResourceNotFoundException;
 import com.medicocareai.backend.repository.AppointmentRepository;
+import com.medicocareai.backend.repository.DoctorAvailabilityRepository;
 import com.medicocareai.backend.repository.DoctorRepository;
 import com.medicocareai.backend.repository.PatientRepository;
 
@@ -29,19 +33,21 @@ public class AppointmentService {
         private final AppointmentRepository appointmentRepository;
         private final PatientRepository patientRepository;
         private final DoctorRepository doctorRepository;
-
         private final NotificationService notificationService;
+        private final DoctorAvailabilityRepository doctorAvailabilityRepository;
 
         public AppointmentService(
                         AppointmentRepository appointmentRepository,
                         PatientRepository patientRepository,
                         DoctorRepository doctorRepository,
-                        NotificationService notificationService) {
+                        NotificationService notificationService,
+                        DoctorAvailabilityRepository doctorAvailabilityRepository) {
 
                 this.appointmentRepository = appointmentRepository;
                 this.patientRepository = patientRepository;
                 this.doctorRepository = doctorRepository;
                 this.notificationService = notificationService;
+                this.doctorAvailabilityRepository = doctorAvailabilityRepository;
         }
 
         @Transactional
@@ -68,6 +74,21 @@ public class AppointmentService {
                         throw new ConflictException(
                                         "Start time must be before end time");
                 }
+
+                long durationMinutes = java.time.Duration.between(
+                                request.getStartTime(),
+                                request.getEndTime()).toMinutes();
+
+                if (durationMinutes != 30) {
+                        throw new ConflictException(
+                                        "Appointment duration must be 30 minutes");
+                }
+
+                validateDoctorAvailability(
+                                doctor.getId(),
+                                request.getAppointmentDate(),
+                                request.getStartTime(),
+                                request.getEndTime());
 
                 boolean overlappingAppointment = appointmentRepository
                                 .existsByDoctorIdAndAppointmentDateAndStartTimeLessThanAndEndTimeGreaterThan(
@@ -442,5 +463,32 @@ public class AppointmentService {
                                                 appointment.getUpdatedAt())
 
                                 .build();
+        }
+
+        private void validateDoctorAvailability(
+                        UUID doctorId,
+                        java.time.LocalDate appointmentDate,
+                        LocalTime startTime,
+                        LocalTime endTime) {
+
+                short dayOfWeek = (short) (appointmentDate.getDayOfWeek() == DayOfWeek.SUNDAY
+                                ? 0
+                                : appointmentDate.getDayOfWeek().getValue());
+
+                List<DoctorAvailability> availabilities = doctorAvailabilityRepository
+                                .findByDoctorIdAndDayOfWeekAndActiveTrue(
+                                                doctorId,
+                                                dayOfWeek);
+
+                boolean withinAvailability = availabilities.stream()
+                                .anyMatch(availability -> !startTime.isBefore(
+                                                availability.getStartTime())
+                                                && !endTime.isAfter(
+                                                                availability.getEndTime()));
+
+                if (!withinAvailability) {
+                        throw new ConflictException(
+                                        "Appointment time is outside doctor's availability");
+                }
         }
 }

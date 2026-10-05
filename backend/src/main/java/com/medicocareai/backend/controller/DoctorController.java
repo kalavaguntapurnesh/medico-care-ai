@@ -1,5 +1,6 @@
 package com.medicocareai.backend.controller;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -37,6 +38,11 @@ public class DoctorController {
 
     }
 
+    @GetMapping
+    public ResponseEntity<List<DoctorResponse>> getApprovedDoctors() {
+        return ResponseEntity.ok(doctorService.getApprovedDoctors());
+    }
+
     @GetMapping("/me")
     public ResponseEntity<DoctorResponse> getCurrentDoctor(Authentication authentication) {
         String email = authentication.getName();
@@ -60,4 +66,5 @@ public class DoctorController {
             @Valid @RequestBody UpdateDoctorApprovalRequest request) {
         return ResponseEntity.ok(doctorService.updateDoctorApproval(id, request));
     }
+
 }
