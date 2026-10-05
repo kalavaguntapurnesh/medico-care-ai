@@ -1,5 +1,6 @@
 package com.medicocareai.backend.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -15,4 +16,6 @@ public interface DoctorRepository extends JpaRepository<Doctor, UUID> {
     boolean existsByUserId(UUID userId);
 
     boolean existsByLicenseNumber(String licenseNumber);
+
+    List<Doctor> findByApprovalStatus(String approvalStatus);
 }

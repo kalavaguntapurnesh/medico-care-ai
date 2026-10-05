@@ -109,6 +109,15 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.POST, "/api/v1/doctors")
                                                 .hasRole("ADMIN")
 
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/api/v1/doctors")
+                                                .hasRole("PATIENT")
+
+                                                .requestMatchers(HttpMethod.GET,
+                                                                "/api/v1/doctors/*/availability")
+                                                .hasRole("PATIENT")
+
                                                 .requestMatchers(HttpMethod.GET, "/api/v1/doctors/me")
                                                 .hasRole("DOCTOR")
 

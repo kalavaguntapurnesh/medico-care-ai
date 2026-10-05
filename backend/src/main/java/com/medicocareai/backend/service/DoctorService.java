@@ -1,6 +1,7 @@
 package com.medicocareai.backend.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -195,6 +196,13 @@ public class DoctorService {
             throw new ConflictException("Doctor account is not approved");
         }
         return doctor;
+    }
+
+    @Transactional(readOnly = true)
+    public List<DoctorResponse> getApprovedDoctors() {
+        List<Doctor> doctors = doctorRepository.findByApprovalStatus(DoctorApprovalStatus.APPROVED.name());
+
+        return doctors.stream().map(this::toResponse).toList();
     }
 
 }
