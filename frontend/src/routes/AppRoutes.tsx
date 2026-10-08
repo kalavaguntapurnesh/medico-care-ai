@@ -11,6 +11,7 @@ import DoctorDashboard from '../pages/doctor/DoctorDashboard'
 import AdminDashboard from '../pages/admin/AdminDashboard'
 import PatientAppointmentsPage from '../pages/patient/PatientAppointmentsPage'
 import DashboardLayout from '../layouts/DashboardLayout'
+import BookAppointmentPage from '../pages/patient/BookAppointmentPage'
 import ProtectedRoute from './ProtectedRoute'
 
 export default function AppRoutes() {
@@ -44,6 +45,12 @@ export default function AppRoutes() {
                         element={
                             <PlaceholderPage title="Medical Records" />
                         }
+                    />
+
+                    <Route
+                        path="/patient/book-appointment"
+                        element={<BookAppointmentPage />}
+
                     />
 
                     <Route
