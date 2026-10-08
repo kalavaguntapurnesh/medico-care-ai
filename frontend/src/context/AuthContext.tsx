@@ -1,7 +1,6 @@
 import {
     createContext,
     useContext,
-    useEffect,
     useState,
     type ReactNode,
 } from 'react'
@@ -31,22 +30,20 @@ interface AuthProviderProps {
 export function AuthProvider({
     children,
 }: AuthProviderProps) {
-    const [user, setUser] = useState<AuthUser | null>(
-        null,
-    )
-
-    useEffect(() => {
+    const [user, setUser] = useState<AuthUser | null>(() => {
         const storedUser = localStorage.getItem('user')
 
         if (storedUser) {
             try {
-                setUser(JSON.parse(storedUser))
+                return JSON.parse(storedUser)
             } catch {
                 localStorage.removeItem('user')
                 localStorage.removeItem('accessToken')
             }
         }
-    }, [])
+
+        return null
+    })
 
     const login = async (
         request: LoginRequest,
