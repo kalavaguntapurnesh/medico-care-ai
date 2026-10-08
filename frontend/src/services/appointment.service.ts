@@ -7,7 +7,8 @@ export interface CreateAppointmentRequest {
     appointmentDate: string,
     startTime: string,
     endTime: string,
-    reason?: string
+    reason?: string,
+    notes?: string
 }
 
 export const getMyAppointments = async (): Promise<Appointment[]> => {

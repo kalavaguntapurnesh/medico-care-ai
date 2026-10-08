@@ -1,4 +1,3 @@
-import type { DoctorResponse } from "./doctor";
 
 export interface DoctorResponse {
     id: string,

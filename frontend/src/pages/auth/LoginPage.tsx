@@ -1,4 +1,5 @@
-import { FormEvent, useState } from 'react'
+import { useState } from 'react'
+import type { FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../../context/AuthContext'
@@ -57,7 +58,7 @@ export default function LoginPage() {
     } catch (error: any) {
       setError(
         error.response?.data?.message ??
-          'Invalid email or password',
+        'Invalid email or password',
       )
     } finally {
       setLoading(false)
