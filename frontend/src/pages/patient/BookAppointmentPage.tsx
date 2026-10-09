@@ -186,8 +186,8 @@ export default function BookAppointmentPage() {
                                 <div
                                     key={doctor.id}
                                     className={`rounded-2xl border bg-white p-6 transition ${isSelected
-                                            ? "border-blue-500 ring-2 ring-blue-100"
-                                            : "border-slate-200 hover:border-blue-300 hover:shadow-sm"
+                                        ? "border-blue-500 ring-2 ring-blue-100"
+                                        : "border-slate-200 hover:border-blue-300 hover:shadow-sm"
                                         }`}
                                 >
                                     {/* Doctor identity */}
@@ -252,8 +252,8 @@ export default function BookAppointmentPage() {
                                             setSlotsError("");
                                         }}
                                         className={`mt-6 w-full rounded-xl px-4 py-3 text-sm font-semibold transition ${isSelected
-                                                ? "bg-blue-600 text-white"
-                                                : "bg-blue-50 text-blue-700 hover:bg-blue-100"
+                                            ? "bg-blue-600 text-white"
+                                            : "bg-blue-50 text-blue-700 hover:bg-blue-100"
                                             }`}
                                     >
                                         {isSelected ? "Doctor Selected" : "Select Doctor"}
@@ -369,31 +369,36 @@ export default function BookAppointmentPage() {
 
                     {/* Slots */}
                     {!slotsLoading && availableSlots.length > 0 && (
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+
                             {availableSlots.map((slot) => {
                                 const isSelected =
                                     selectedSlot?.startTime === slot.startTime &&
                                     selectedSlot?.endTime === slot.endTime;
 
                                 return (
+
                                     <button
-                                        key={`${slot.startTime}-${slot.endTime}`}
+
+                                        key={`${slot.startTime} - ${slot.endTime}`}
                                         type="button"
                                         onClick={() => setSelectedSlot(slot)}
-                                        className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition ${isSelected
-                                                ? "border-blue-600 bg-blue-600 text-white"
-                                                : "border-slate-200 bg-white text-slate-700 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700"
+                                        className={`flex min-h-[52px] items-center justify-center rounded-xl border px-4 py-3 text-sm font-semibold transition ${isSelected
+                                            ? "border-blue-600 bg-blue-600 text-white shadow-sm"
+                                            : "border-slate-200 bg-white text-slate-700 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700"
                                             }`}
-                                    >
-                                        <Clock className="h-4 w-4" />
 
-                                        <span>
-                                            {slot.startTime.slice(0, 5)} -{" "}
-                                            {slot.endTime.slice(0, 5)}
+                                    >
+
+                                        <Clock className="mr-2 h-4 w-4 shrink-0" />
+                                        <span className="whitespace-nowrap">
+                                            {slot.startTime.slice(0, 5)} - {slot.endTime.slice(0, 5)}
                                         </span>
+
                                     </button>
-                                );
+                                )
                             })}
+
                         </div>
                     )}
 
