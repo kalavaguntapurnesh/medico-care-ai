@@ -20,6 +20,8 @@ export default function PatientAppointmentsPage() {
 
     const [cancellingId, setCancellingId] = useState<string | null>(null);
 
+    const [successMessage, setSuccessMessage] = useState("");
+
     useEffect(() => {
         loadAppointments()
     }, []);
@@ -48,8 +50,10 @@ export default function PatientAppointmentsPage() {
 
         try {
             setCancellingId(appointmentId);
-            setError('')
+            setError('');
+            setSuccessMessage("");
             await cancelAppointment(appointmentId);
+            setSuccessMessage("Appointment Cancelled Successfully.");
             await loadAppointments();
             setSelectedAppointment(null);
         } catch (error: any) {
@@ -80,6 +84,12 @@ export default function PatientAppointmentsPage() {
             {error && (
                 <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
                     {error}
+                </div>
+            )}
+
+            {successMessage && (
+                <div className="mb-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                    {successMessage}
                 </div>
             )}
 
@@ -155,8 +165,8 @@ export default function PatientAppointmentsPage() {
                                                         className="text-slate-400"
                                                     />
 
-                                                    {appointment.startTime} -{' '}
-                                                    {appointment.endTime}
+                                                    {formatTime(appointment.startTime)} -{' '}
+                                                    {formatTime(appointment.endTime)}
                                                 </div>
                                             </td>
 
@@ -248,22 +258,30 @@ function StatusBadge({
         string
     > = {
         PENDING:
-            'bg-yellow-50 text-yellow-700',
+            'bg-yellow-50 text-yellow-700 ring-amber-600/20',
         CONFIRMED:
-            'bg-green-50 text-green-700',
+            'bg-green-50 text-green-700 ring-green-600/20',
         REJECTED:
-            'bg-red-50 text-red-700',
+            'bg-red-50 text-red-700 ring-red-600/20',
         CANCELLED:
-            'bg-slate-100 text-slate-600',
+            'bg-slate-100 text-slate-600 ring-slate-500/20',
         COMPLETED:
-            'bg-blue-50 text-blue-700',
+            'bg-blue-50 text-blue-700 ring-blue-600/20',
+    };
+
+    const labels: Record<Appointment["status"], string> = {
+        PENDING: "Pending",
+        CONFIRMED: "Confirmed",
+        REJECTED: "Rejected",
+        CANCELLED: "Cancelled",
+        COMPLETED: "Completed"
     }
 
     return (
         <span
-            className={`rounded-full px-3 py-1 text-xs font-semibold ${styles[status]}`}
+            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset ${styles[status]}`}
         >
-            {status}
+            {labels[status]}
         </span>
     )
 
@@ -306,7 +324,7 @@ function AppointmentDetailsModal({
 
                     <Detail
                         label="Time"
-                        value={`${appointment.startTime} - ${appointment.endTime}`}
+                        value={`${formatTime(appointment.startTime)} - ${formatTime(appointment.endTime)}`}
                     />
 
                     <Detail
@@ -364,4 +382,9 @@ function Detail({
             </p>
         </div>
     )
+}
+
+
+function formatTime(time: string): string {
+    return time.slice(0, 5);
 }

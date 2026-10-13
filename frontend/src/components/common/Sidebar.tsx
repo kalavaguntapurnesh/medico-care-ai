@@ -44,6 +44,11 @@ const navigation: Record<UserRole, NavigationItem[]> = {
             icon: CalendarDays,
         },
         {
+            label: 'Book Appointment',
+            path: '/patient/book-appointment',
+            icon: Stethoscope,
+        },
+        {
             label: 'Medical Records',
             path: '/patient/medical-records',
             icon: FileText,
