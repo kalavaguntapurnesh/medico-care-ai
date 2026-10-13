@@ -53,3 +53,37 @@ export const cancelAppointment = async (
     )
     return response.data
 }
+
+
+export interface DoctorAppointment extends Appointment {
+    patientId: string;
+    doctorId: string;
+    patientEmail: string;
+    patientFirstName: string;
+    patientLastName: string;
+    doctorEmail: string;
+    doctorFirstName: string;
+    doctorLastName: string;
+    doctorSpecialization: string;
+}
+
+export const getDoctorAppointments = async (): Promise<DoctorAppointment[]> => {
+    const response = await api.get<DoctorAppointment[]>(
+        '/appointments/doctor/me'
+    );
+
+    return response.data;
+}
+
+
+export const updateDoctorAppointmentStatus = async (
+    appointmentId: string,
+    status: 'CONFIRMED' | 'REJECTED' | 'COMPLETED'
+): Promise<DoctorAppointment> => {
+    const response = await api.put<DoctorAppointment>(
+        `/appointments/doctor/me/${appointmentId}/status`,
+        { status }
+    );
+
+    return response.data;
+}
