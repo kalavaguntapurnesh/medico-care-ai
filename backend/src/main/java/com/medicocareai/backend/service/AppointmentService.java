@@ -129,8 +129,14 @@ public class AppointmentService {
 
                 notificationRequest.setTitle("New Appointment Request");
 
-                notificationRequest.setUserId(
-                                doctor.getUser().getId());
+                notificationRequest.setMessage(
+                                patient.getUser().getFirstName() + " "
+                                                + patient.getUser().getLastName()
+                                                + " requested an appointment on "
+                                                + savedAppointment.getAppointmentDate()
+                                                + " at "
+                                                + savedAppointment.getStartTime()
+                                                + ".");
 
                 notificationRequest.setReferenceType("APPOINTMENT");
                 notificationRequest.setReferenceId(savedAppointment.getId());

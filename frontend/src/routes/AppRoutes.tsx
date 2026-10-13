@@ -6,6 +6,7 @@ import {
 
 import LoginPage from '../pages/auth/LoginPage'
 
+import DoctorAppointmentsPage from '../pages/doctor/DoctorAppointmentsPage'
 import PatientDashboard from '../pages/patient/PatientDashboard'
 import DoctorDashboard from '../pages/doctor/DoctorDashboard'
 import AdminDashboard from '../pages/admin/AdminDashboard'
@@ -98,7 +99,7 @@ export default function AppRoutes() {
                     <Route
                         path="/doctor/appointments"
                         element={
-                            <PlaceholderPage title="Appointments" />
+                            <DoctorAppointmentsPage />
                         }
                     />
 
