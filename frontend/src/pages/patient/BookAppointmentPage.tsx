@@ -19,10 +19,18 @@ import type {
     AvailableSlotResponse,
 } from "../../types/doctor";
 
+import { createAppointment } from "../../services/appointment.service";
+
 export default function BookAppointmentPage() {
     const [doctors, setDoctors] = useState<DoctorResponse[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+
+    const [reason, setReason] = useState("");
+    const [notes, setNotes] = useState("");
+    const [bookingLoading, setBookingLoading] = useState(false);
+    const [bookingError, setBookingError] = useState("");
+    const [bookingSuccess, setBookingSuccess] = useState("");
 
     const [selectedDoctor, setSelectedDoctor] =
         useState<DoctorResponse | null>(null);
@@ -111,6 +119,41 @@ export default function BookAppointmentPage() {
 
         return tomorrow.toISOString().split("T")[0];
     };
+
+    const handleConfirmBooking = async () => {
+        if (!selectedDoctor || !selectedDate || !selectedSlot) {
+            return;
+        }
+
+        try {
+            setBookingLoading(true);
+            setBookingError("");
+            setBookingSuccess("");
+
+            await createAppointment({
+                doctorId: selectedDoctor.id,
+                appointmentDate: selectedDate,
+                startTime: selectedSlot.startTime,
+                endTime: selectedSlot.endTime,
+                reason: reason.trim() || undefined,
+                notes: notes.trim() || undefined,
+            });
+
+            setBookingSuccess("Your appointment request has been submitted successfully.");
+            setReason("");
+            setNotes("");
+            setSelectedSlot(null);
+            setAvailableSlots([]);
+        } catch (error: any) {
+            setBookingError(
+                error?.response?.data?.message ??
+                "Unable to book the appointment. Please try again."
+            );
+        }
+        finally {
+            setBookingLoading(false);
+        }
+    }
 
     if (loading) {
         return (
@@ -420,6 +463,99 @@ export default function BookAppointmentPage() {
                             </div>
                         </div>
                     )}
+                </section>
+            )}
+
+
+            {/* Step 4. Confirm the slot */}
+
+            {selectedDoctor && selectedDate && selectedSlot && (
+                <section className="rounded-2xl border border-slate-200 bg-white p-6">
+                    <div className="mb-5 flex items-center gap-2">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
+
+                            4
+                        </span>
+
+                        <h2 className="text-lg font-semibold text-slate-900">Confirm Appointment</h2>
+
+                    </div>
+
+                    <div className="mb-6 rounded-l bg-blue-50 p-4 text-sm text-blue-900">
+
+                        <p>
+                            <strong>Doctor : </strong>Dr. {selectedDoctor.firstName}{" "}
+                            {selectedDoctor.lastName}
+                        </p>
+
+                        <p className="mt-1">
+                            <strong>Date : </strong>{selectedDate}
+                        </p>
+
+                        <p className="mt-1">
+                            <strong>Time:</strong> {selectedSlot.startTime.slice(0, 5)} - {" "}
+                            {selectedSlot.endTime.slice(0, 5)}
+
+                        </p>
+                    </div>
+
+                    <div className="mb-4">
+                        <label
+                            htmlFor="appointment-reason"
+                            className="mb-2 block text-sm font-medium text-slate-700"
+                        >
+                            Reason for Appointment
+                        </label>
+                        <input
+                            id="appointment-reason"
+                            type="text"
+                            value={reason}
+                            onChange={(event) => setReason(event.target.value)}
+                            placeholder="e.g. General consultation"
+                            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                        />
+                    </div>
+
+                    <div className="mb-5">
+                        <label
+                            htmlFor="appointment-notes"
+                            className="mb-2 block text-sm font-medium text-slate-700"
+                        >
+                            Additional Notes (Optional)
+                        </label>
+                        <textarea
+                            id="appointment-notes"
+                            value={notes}
+                            onChange={(event) => setNotes(event.target.value)}
+                            rows={3}
+                            placeholder="Share any relevant information..."
+                            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                        />
+                    </div>
+
+                    {bookingError && (
+                        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                            {bookingError}
+                        </div>
+                    )}
+
+                    {bookingSuccess && (
+                        <div className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                            {bookingSuccess}
+                        </div>
+                    )}
+
+
+                    <button
+
+                        type="button"
+                        disabled={bookingLoading}
+                        onClick={handleConfirmBooking}
+                        className="w-full rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                    >
+                        {bookingLoading ? "Booking Appointment ...." : "Confirm Appointment"}
+                    </button>
+
                 </section>
             )}
         </div>
