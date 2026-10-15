@@ -21,7 +21,21 @@ import com.medicocareai.backend.dto.medicalrecord.UpdateMedicalRecordRequest;
 import com.medicocareai.backend.security.CustomUserPrincipal;
 import com.medicocareai.backend.service.MedicalRecordService;
 
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+
 import jakarta.validation.Valid;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.UUID;
+
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 
 @RestController
 @RequestMapping("/api/v1/medical-records")
@@ -33,12 +47,15 @@ public class MedicalRecordController {
         this.medicalRecordService = medicalRecordService;
     }
 
-    @PostMapping
+    @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<MedicalRecordResponse> createMedicalRecord(
             Authentication authentication,
-            @Valid @RequestBody CreateMedicalRecordRequest request) {
+            @Valid @ModelAttribute CreateMedicalRecordRequest request,
+            @RequestParam("file") MultipartFile file) {
         UUID userId = getUserId(authentication);
-        MedicalRecordResponse response = medicalRecordService.createMedicalRecord(userId, request);
+
+        MedicalRecordResponse response = medicalRecordService.createMedicalRecord(userId, request, file);
+
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -88,6 +105,40 @@ public class MedicalRecordController {
             @PathVariable UUID patientId) {
         UUID doctorUserId = getUserId(authentication);
         return ResponseEntity.ok(medicalRecordService.getPatientMedicalRecordsForDoctor(doctorUserId, patientId));
+    }
+
+    @GetMapping("/me/{id}/download")
+    public ResponseEntity<Resource> downloadMyMedicalRecord(
+            Authentication authentication,
+            @PathVariable UUID id) {
+
+        UUID userId = getUserId(authentication);
+
+        // The service verifies ownership and that the record is not deleted.
+        Path filePath = medicalRecordService.getPatientMedicalRecordFile(
+                userId, id);
+
+        MedicalRecordResponse record = medicalRecordService.getPatientMedicalRecord(userId, id);
+
+        Resource resource = new FileSystemResource(filePath);
+
+        MediaType mediaType;
+        try {
+            mediaType = MediaType.parseMediaType(record.getMimeType());
+        } catch (Exception ex) {
+            mediaType = MediaType.APPLICATION_OCTET_STREAM;
+        }
+
+        ContentDisposition disposition = ContentDisposition.attachment()
+                .filename(record.getFileName())
+                .build();
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        disposition.toString())
+                .contentLength(record.getFileSize())
+                .body(resource);
     }
 
     private UUID getUserId(Authentication authentication) {

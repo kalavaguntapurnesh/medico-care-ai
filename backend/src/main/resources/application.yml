@@ -16,6 +16,11 @@ spring:
   flyway:
     enabled: true
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 12MB
+
 server:
   port: 8080
 
@@ -26,7 +31,13 @@ management:
         include: health,info
 
 app:
+
+  storage:
+    medical-records-dir: ${MEDICAL_RECORDS_DIR:./private-uploads/medical-records}
+    
   security:
     jwt:
       secret: ${JWT_SECRET:VGhpcy1pcy1hLWRldi1zZWNyZXQta2V5LXRvLWJlLXJlcGxhY2Vk}
       expiration-ms: 3600000
+
+    
