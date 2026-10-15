@@ -20,16 +20,6 @@ public class UpdateMedicalRecordRequest {
     @Size(max = 5000, message = "Description must not exceed 5000 characters")
     private String description;
 
-    @Size(max = 255, message = "File name must not exceed 255 characters")
-    private String fileName;
-
-    private String filePath;
-
-    @Size(max = 100, message = "MIME type must not exceed 100 characters")
-    private String mimeType;
-
-    private Long fileSize;
-
     @PastOrPresent(message = "Record date cannot be in the future")
     private LocalDate recordDate;
 
