@@ -311,4 +311,57 @@ public class MedicalRecordService {
                         throw new ResourceNotFoundException("Medical record file not found");
                 }
         }
+
+        public record MedicalRecordDownload(
+                        Path filePath,
+                        String fileName,
+                        String mimeType,
+                        long fileSize) {
+        }
+
+        @Transactional(readOnly = true)
+        public MedicalRecordDownload getDoctorMedicalRecordFile(
+                        UUID doctorUserId,
+                        UUID patientId,
+                        UUID medicalRecordId) {
+
+                Doctor doctor = doctorRepository.findByUserId(doctorUserId)
+                                .orElseThrow(() -> new ResourceNotFoundException("Doctor profile not found"));
+
+                Patient patient = patientRepository.findById(patientId)
+                                .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
+
+                // Verify that this doctor has an appointment relationship with the patient.
+                boolean hasAppointment = appointmentRepository
+                                .existsByDoctorIdAndPatientId(doctor.getId(), patient.getId());
+
+                if (!hasAppointment) {
+                        throw new ResourceNotFoundException("Patient not found");
+                }
+
+                MedicalRecord medicalRecord = medicalRecordRepository
+                                .findById(medicalRecordId)
+                                .orElseThrow(() -> new ResourceNotFoundException("Medical record not found"));
+
+                // Do not expose deleted records or records belonging to another patient.
+                if (medicalRecord.getDeletedAt() != null
+                                || !medicalRecord.getPatient().getId().equals(patient.getId())) {
+                        throw new ResourceNotFoundException("Medical record not found");
+                }
+
+                try {
+                        Path filePath = medicalRecordStorageService.getExistingFile(
+                                        medicalRecord.getFilePath());
+
+                        return new MedicalRecordDownload(
+                                        filePath,
+                                        medicalRecord.getFileName(),
+                                        medicalRecord.getMimeType(),
+                                        medicalRecord.getFileSize());
+
+                } catch (IOException ex) {
+                        throw new ResourceNotFoundException("Medical record file not found");
+                }
+        }
+
 }
