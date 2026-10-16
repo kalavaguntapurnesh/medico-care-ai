@@ -177,6 +177,10 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.GET, "/api/v1/medical-records/me")
                                                 .hasRole("PATIENT")
 
+                                                .requestMatchers(HttpMethod.GET,
+                                                                "/api/v1/medical-records/me/*/download")
+                                                .hasRole("PATIENT")
+
                                                 .requestMatchers(HttpMethod.GET, "/api/v1/medical-records/me/*")
                                                 .hasRole("PATIENT")
 
@@ -193,6 +197,11 @@ public class SecurityConfig {
                                                 .requestMatchers(
                                                                 HttpMethod.GET,
                                                                 "/api/v1/medical-records/patient/*")
+                                                .hasRole("DOCTOR")
+
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/api/v1/medical-records/patient/*/*/download")
                                                 .hasRole("DOCTOR")
 
                                                 // prescriptions

@@ -141,6 +141,41 @@ public class MedicalRecordController {
                 .body(resource);
     }
 
+    @GetMapping("/patient/{patientId}/{recordId}/download")
+    public ResponseEntity<Resource> downloadPatientMedicalRecordForDoctor(
+            Authentication authentication,
+            @PathVariable UUID patientId,
+            @PathVariable UUID recordId) {
+
+        UUID doctorUserId = getUserId(authentication);
+
+        MedicalRecordService.MedicalRecordDownload download = medicalRecordService.getDoctorMedicalRecordFile(
+                doctorUserId,
+                patientId,
+                recordId);
+
+        Resource resource = new FileSystemResource(download.filePath());
+
+        MediaType mediaType;
+        try {
+            mediaType = MediaType.parseMediaType(download.mimeType());
+        } catch (Exception ex) {
+            mediaType = MediaType.APPLICATION_OCTET_STREAM;
+        }
+
+        ContentDisposition disposition = ContentDisposition.attachment()
+                .filename(download.fileName())
+                .build();
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        disposition.toString())
+                .contentLength(download.fileSize())
+                .body(resource);
+    }
+
     private UUID getUserId(Authentication authentication) {
         CustomUserPrincipal principal = (CustomUserPrincipal) authentication.getPrincipal();
         return principal.getUserId();
