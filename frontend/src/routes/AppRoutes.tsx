@@ -14,6 +14,7 @@ import PatientAppointmentsPage from '../pages/patient/PatientAppointmentsPage'
 import DashboardLayout from '../layouts/DashboardLayout'
 import BookAppointmentPage from '../pages/patient/BookAppointmentPage'
 import ProtectedRoute from './ProtectedRoute'
+import DoctorPatientsPage from '../pages/doctor/DoctorPatientsPage'
 
 export default function AppRoutes() {
     return (
@@ -106,7 +107,7 @@ export default function AppRoutes() {
                     <Route
                         path="/doctor/patients"
                         element={
-                            <PlaceholderPage title="Patients" />
+                            <DoctorPatientsPage />
                         }
                     />
 

@@ -243,7 +243,7 @@ public class MedicalRecordService {
                                 .title(medicalRecord.getTitle())
                                 .description(medicalRecord.getDescription())
                                 .fileName(medicalRecord.getFileName())
-                                .filePath(medicalRecord.getFilePath())
+                                .downloadUrl("/api/v1/medical-records/me/" + medicalRecord.getId() + "/download")
                                 .mimeType(medicalRecord.getMimeType())
                                 .fileSize(medicalRecord.getFileSize())
                                 .recordDate(medicalRecord.getRecordDate())
