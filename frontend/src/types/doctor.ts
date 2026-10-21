@@ -7,7 +7,7 @@ export interface DoctorResponse {
     lastName: string,
     specialization: string,
     qualification: string,
-    experienceYears: string,
+    experienceYears: number,
     consultationFee: number | null,
     licenseNumber: string | null,
     approvalStatus: string,

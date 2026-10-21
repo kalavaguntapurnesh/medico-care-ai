@@ -27,7 +27,7 @@ public class MedicalRecordResponse {
 
     private String fileName;
 
-    private String filePath;
+    private String downloadUrl;
 
     private String mimeType;
 
