@@ -1,6 +1,12 @@
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
+import type { FormEvent } from 'react';
 
 import { getMyPatientPrescriptions } from '../../services/prescription.service'
 
@@ -137,7 +143,7 @@ export default function PatientRemindersPage() {
         )
     }
 
-    const handleCreate = async (event: React.FormEvent<HTMLFormElement>) => {
+    const handleCreate = async (event : FormEvent<HTMLFormElement>) => {
         event.preventDefault()
         setError('')
         setSuccess('')

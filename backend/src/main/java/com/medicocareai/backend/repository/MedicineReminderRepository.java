@@ -14,4 +14,6 @@ public interface MedicineReminderRepository
     List<MedicineReminder> findByPatientIdAndActiveTrue(UUID patientId);
 
     List<MedicineReminder> findByMedicineId(UUID medicineId);
+
+    List<MedicineReminder> findByActiveTrue();
 }
