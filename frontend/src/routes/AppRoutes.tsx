@@ -17,6 +17,7 @@ import ProtectedRoute from './ProtectedRoute'
 import DoctorPatientsPage from '../pages/doctor/DoctorPatientsPage'
 import PatientPrescriptionsPage from '../pages/patient/PatientPrescriptionsPage'
 import DoctorPrescriptionsPage from '../pages/doctor/DoctorPrescriptionsPage'
+import PatientRemindersPage from '../pages/patient/PatientRemindersPage'
 
 export default function AppRoutes() {
     return (
@@ -67,7 +68,7 @@ export default function AppRoutes() {
                     <Route
                         path="/patient/reminders"
                         element={
-                            <PlaceholderPage title="Medicine Reminders" />
+                            <PatientRemindersPage />
                         }
                     />
 
