@@ -19,6 +19,7 @@ import PatientPrescriptionsPage from '../pages/patient/PatientPrescriptionsPage'
 import DoctorPrescriptionsPage from '../pages/doctor/DoctorPrescriptionsPage'
 import PatientRemindersPage from '../pages/patient/PatientRemindersPage'
 import NotificationCenterPage from '../pages/shared/NotificationCenterPage'
+import DoctorAvailabilityPage from '../pages/doctor/DoctorAvailabilityPage'
 
 export default function AppRoutes() {
     return (
@@ -125,7 +126,7 @@ export default function AppRoutes() {
                     <Route
                         path="/doctor/availability"
                         element={
-                            <PlaceholderPage title="Availability" />
+                            <DoctorAvailabilityPage />
                         }
                     />
 
