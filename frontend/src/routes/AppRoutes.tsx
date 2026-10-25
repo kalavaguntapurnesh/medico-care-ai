@@ -18,6 +18,7 @@ import DoctorPatientsPage from '../pages/doctor/DoctorPatientsPage'
 import PatientPrescriptionsPage from '../pages/patient/PatientPrescriptionsPage'
 import DoctorPrescriptionsPage from '../pages/doctor/DoctorPrescriptionsPage'
 import PatientRemindersPage from '../pages/patient/PatientRemindersPage'
+import NotificationCenterPage from '../pages/shared/NotificationCenterPage'
 
 export default function AppRoutes() {
     return (
@@ -75,7 +76,7 @@ export default function AppRoutes() {
                     <Route
                         path="/patient/notifications"
                         element={
-                            <PlaceholderPage title="Notifications" />
+                            <NotificationCenterPage />
                         }
                     />
 
@@ -131,7 +132,7 @@ export default function AppRoutes() {
                     <Route
                         path="/doctor/notifications"
                         element={
-                            <PlaceholderPage title="Notifications" />
+                            <NotificationCenterPage />
                         }
                     />
                 </Route>
