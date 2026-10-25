@@ -28,3 +28,9 @@ export const markNotificationsAsRead = async (
 export const markAllNotificationsAsRead = async (): Promise<void> => {
     await api.patch('/notifications/me/read-all');
 }
+
+
+export const getUnreadNotificationCount = async (): Promise<number> => {
+    const notifications = await getMyUnreadNotifications();
+    return notifications.length;
+}
