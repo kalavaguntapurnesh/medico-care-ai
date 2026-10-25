@@ -114,10 +114,6 @@ public class SecurityConfig {
                                                                 "/api/v1/doctors")
                                                 .hasRole("PATIENT")
 
-                                                .requestMatchers(HttpMethod.GET,
-                                                                "/api/v1/doctors/*/availability")
-                                                .hasRole("PATIENT")
-
                                                 .requestMatchers(HttpMethod.GET, "/api/v1/doctors/me")
                                                 .hasRole("DOCTOR")
 
@@ -252,6 +248,10 @@ public class SecurityConfig {
                                                                 HttpMethod.DELETE,
                                                                 "/api/v1/doctors/me/availability/*")
                                                 .hasRole("DOCTOR")
+
+                                                .requestMatchers(HttpMethod.GET,
+                                                                "/api/v1/doctors/*/availability")
+                                                .hasRole("PATIENT")
 
                                                 // reminders
 
