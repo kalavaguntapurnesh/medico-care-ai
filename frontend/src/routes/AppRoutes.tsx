@@ -20,6 +20,7 @@ import DoctorPrescriptionsPage from '../pages/doctor/DoctorPrescriptionsPage'
 import PatientRemindersPage from '../pages/patient/PatientRemindersPage'
 import NotificationCenterPage from '../pages/shared/NotificationCenterPage'
 import DoctorAvailabilityPage from '../pages/doctor/DoctorAvailabilityPage'
+import PatientMedicalRecordsPage from '../pages/patient/PatientMedicalRecordsPage'
 
 export default function AppRoutes() {
     return (
@@ -50,7 +51,7 @@ export default function AppRoutes() {
                     <Route
                         path="/patient/medical-records"
                         element={
-                            <PlaceholderPage title="Medical Records" />
+                            <PatientMedicalRecordsPage />
                         }
                     />
 
