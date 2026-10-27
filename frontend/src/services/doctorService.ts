@@ -23,3 +23,9 @@ export const getDoctorAvailableSlots = async (
     );
     return response.data
 }
+
+
+export const getAllDoctorsForAdmin = async (): Promise<DoctorResponse[]> => {
+    const response = await api.get<DoctorResponse[]>('/doctors/admin/all');
+    return response.data;
+}

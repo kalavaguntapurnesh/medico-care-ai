@@ -31,6 +31,11 @@ public class DoctorController {
         this.doctorService = doctorService;
     }
 
+    @GetMapping("/admin/all")
+    public ResponseEntity<List<DoctorResponse>> getAllDoctors(){
+        return ResponseEntity.ok(doctorService.getAllDoctors());
+    }
+
     @PostMapping
     public ResponseEntity<DoctorResponse> createDoctor(@Valid @RequestBody CreateDoctorRequest request) {
         DoctorResponse response = doctorService.createDoctor(request);
