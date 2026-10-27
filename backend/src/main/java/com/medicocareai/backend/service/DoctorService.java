@@ -205,4 +205,9 @@ public class DoctorService {
         return doctors.stream().map(this::toResponse).toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<DoctorResponse> getAllDoctors() {
+        return doctorRepository.findAll().stream().map(this::toResponse).toList();
+    }
+
 }

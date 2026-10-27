@@ -21,6 +21,8 @@ import PatientRemindersPage from '../pages/patient/PatientRemindersPage'
 import NotificationCenterPage from '../pages/shared/NotificationCenterPage'
 import DoctorAvailabilityPage from '../pages/doctor/DoctorAvailabilityPage'
 import PatientMedicalRecordsPage from '../pages/patient/PatientMedicalRecordsPage'
+import AdminUsersPage from '../pages/admin/AdminUsersPage'
+import AdminDoctorsPage from '../pages/admin/AdminDoctorsPage'
 
 export default function AppRoutes() {
     return (
@@ -155,14 +157,14 @@ export default function AppRoutes() {
                     <Route
                         path="/admin/users"
                         element={
-                            <PlaceholderPage title="Users" />
+                            <AdminUsersPage />
                         }
                     />
 
                     <Route
                         path="/admin/doctors"
                         element={
-                            <PlaceholderPage title="Doctors" />
+                            <AdminDoctorsPage />
                         }
                     />
 
