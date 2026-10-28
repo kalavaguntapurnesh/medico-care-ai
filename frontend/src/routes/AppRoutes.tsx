@@ -23,6 +23,7 @@ import DoctorAvailabilityPage from '../pages/doctor/DoctorAvailabilityPage'
 import PatientMedicalRecordsPage from '../pages/patient/PatientMedicalRecordsPage'
 import AdminUsersPage from '../pages/admin/AdminUsersPage'
 import AdminDoctorsPage from '../pages/admin/AdminDoctorsPage'
+import AdminClinicsPage from '../pages/admin/AdminClinicsPage'
 
 export default function AppRoutes() {
     return (
@@ -171,7 +172,7 @@ export default function AppRoutes() {
                     <Route
                         path="/admin/clinics"
                         element={
-                            <PlaceholderPage title="Clinics" />
+                            <AdminClinicsPage />
                         }
                     />
 
