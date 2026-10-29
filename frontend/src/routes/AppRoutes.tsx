@@ -24,6 +24,7 @@ import PatientMedicalRecordsPage from '../pages/patient/PatientMedicalRecordsPag
 import AdminUsersPage from '../pages/admin/AdminUsersPage'
 import AdminDoctorsPage from '../pages/admin/AdminDoctorsPage'
 import AdminClinicsPage from '../pages/admin/AdminClinicsPage'
+import PatientClinicsPage from '../pages/patient/PatientClinicsPage'
 
 export default function AppRoutes() {
     return (
@@ -88,7 +89,7 @@ export default function AppRoutes() {
                     <Route
                         path="/patient/clinics"
                         element={
-                            <PlaceholderPage title="Clinics" />
+                            <PatientClinicsPage />
                         }
                     />
                 </Route>
