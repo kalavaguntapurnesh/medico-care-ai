@@ -25,6 +25,7 @@ import AdminUsersPage from '../pages/admin/AdminUsersPage'
 import AdminDoctorsPage from '../pages/admin/AdminDoctorsPage'
 import AdminClinicsPage from '../pages/admin/AdminClinicsPage'
 import PatientClinicsPage from '../pages/patient/PatientClinicsPage'
+import AdminAuditLogsPage from '../pages/admin/AdminAuditLogsPage'
 
 export default function AppRoutes() {
     return (
@@ -180,7 +181,7 @@ export default function AppRoutes() {
                     <Route
                         path="/admin/audit-logs"
                         element={
-                            <PlaceholderPage title="Audit Logs" />
+                            <AdminAuditLogsPage />
                         }
                     />
                 </Route>
